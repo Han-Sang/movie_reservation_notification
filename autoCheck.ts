@@ -2,7 +2,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import DolbyCrawler from './crawlers/dolbyCrawler';
 import { config } from './config';
 
-const TARGET_DATE = '20260831';
+const TARGET_DATE = '20260826';
 const TARGET_THEATER = '남돌비';
 const TARGET_MOVIE = '오딧세이';
 
@@ -34,16 +34,20 @@ async function main(): Promise<void> {
 
             const result = await crawler.crawl();
 
-          const normalizedResult = result.replace(/\s+/g, '');
+console.log('[12] crawl() 결과 수신');
+console.log('[12-1] result 타입:', typeof result);
+console.log('[12-2] result 길이:', result?.length);
+console.log('[12-3] TARGET_MOVIE:', JSON.stringify(TARGET_MOVIE));
+
+const normalizedResult = (result ?? '').replace(/\s+/g, '');
 const normalizedMovie = TARGET_MOVIE.replace(/\s+/g, '');
 
-console.log('[12] TARGET_MOVIE:', JSON.stringify(TARGET_MOVIE));
 console.log(
     '[13] 영화 포함 여부:',
     normalizedResult.includes(normalizedMovie)
 );
 
-if (result && normalizedResult.includes(normalizedMovie)) {
+if (normalizedResult.includes(normalizedMovie)) {
     console.log('[14] 오딧세이 발견 → Telegram 전송 시작');
 
     try {
@@ -62,9 +66,11 @@ if (result && normalizedResult.includes(normalizedMovie)) {
         throw err;
     }
 
-    console.log('목표 영화 발견! 감시를 종료합니다.');
+    console.log('[16] 목표 영화 발견! 감시를 종료합니다.');
     break;
 }
+
+console.log('[16] 목표 영화가 없습니다. 다시 확인합니다.');
 
             console.log(
                 `${TARGET_MOVIE}가 아직 시간표에 없습니다. 다시 확인합니다.`
