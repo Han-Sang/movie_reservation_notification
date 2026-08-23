@@ -11,7 +11,6 @@ class DolbyCrawler extends Crawler {
 
     /* 메가박스 Dolby 웹 크롤링 */
     async crawl(): Promise<string> {
-        // crawl() 재진입 시 isStop 초기화
         this.isStop = false;
 
         this.browser = await Puppeteer.launch({
@@ -30,18 +29,26 @@ class DolbyCrawler extends Crawler {
                     } as const;
 
                     console.log('[1] 메가박스 페이지 접속');
-                    await page.goto(this.config.urls.dolby, pageOption);
+
+                    await page.goto(
+                        this.config.urls.dolby,
+                        pageOption
+                    );
 
                     console.log('[2] 극장 선택 시작');
+
                     await this.selectTheater(page);
 
                     console.log('[3] 극장 선택 완료');
+
                     await this.openCalendar(page);
 
                     console.log('[4] 달력 열기 완료');
+
                     await this.adjustMonth(page);
 
                     console.log('[5] 월 조정 완료');
+
                     await this.selectDay(page);
 
                     console.log('[6] 날짜 선택 완료');
@@ -69,29 +76,53 @@ class DolbyCrawler extends Crawler {
 
                     console.log('[8] 시간표 파싱 시작');
 
-                    const { timeTable, dolby } =
-                        await this.parseDolbyTimetable(page);
+                    const {
+                        timeTable,
+                        dolby
+                    } = await this.parseDolbyTimetable(page);
+
+                    console.log(
+                        '[PARSE] 최종 timeTable 길이:',
+                        timeTable.length
+                    );
+
+                    console.log(
+                        '[PARSE] 최종 dolby:',
+                        dolby
+                    );
 
                     console.log(
                         '[9] Dolby 발견 여부:',
                         dolby
                     );
 
-                    /*
-                     * Dolby Cinema가 발견되면
-                     * 시간표 전체를 그대로 반환한다.
-                     */
                     if (dolby) {
-    console.log("[10] 시간표 반환 시작");
-    console.log("[10-1] 반환할 시간표 길이:", timeTable.length);
-    console.log("[10-2] 반환할 시간표:", timeTable);
+                        console.log(
+                            '[10] 시간표 반환 시작'
+                        );
 
-    await this.closeQuietly(page);
+                        console.log(
+                            '[10-1] 반환할 시간표 길이:',
+                            timeTable.length
+                        );
 
-    console.log("[11] 시간표 반환 완료");
+                        console.log(
+                            '[10-2] 반환할 시간표:',
+                            timeTable
+                        );
 
-    return timeTable;
-}
+                        await this.closeQuietly(page);
+
+                        console.log(
+                            '[11] 시간표 반환 완료'
+                        );
+
+                        // 중요:
+                        // 여기서는 browser를 닫지 않는다.
+                        // return 이후 autoCheck.ts에서
+                        // crawler.crawl()의 반환값을 받아야 한다.
+                        return timeTable;
+                    }
 
                     console.log(
                         '[10] Dolby Cinema가 열리지 않았습니다.'
@@ -103,32 +134,49 @@ class DolbyCrawler extends Crawler {
                     await this.trick();
 
                 } catch (err) {
+                    this.handleError(err);
+
                     console.error(
-                        '[Crawler 내부 오류]',
+                        '[크롤링 내부 오류]',
                         err
                     );
-
-                    this.handleError(err);
 
                     await this.closeQuietly(page);
                     await this.trick();
                 }
             }
+
+            return '';
+
         } finally {
-    console.log("[11-1] crawl finally 진입");
+            console.log(
+                '[11-1] crawl finally 진입'
+            );
 
-    this.browser = null;
+            /*
+             * 중요
+             *
+             * 여기서
+             *
+             * await this.closeQuietly(this.browser);
+             *
+             * 를 호출하지 않는다.
+             *
+             * browser를 닫으면서 crawl() 반환 과정이 꼬이는 것을
+             * 방지하기 위해 여기서는 참조만 정리한다.
+             */
 
-    console.log("[11-2] crawl finally 종료");
-}
+            this.browser = null;
 
-        return '';
+            console.log(
+                '[11-2] crawl finally 종료'
+            );
+        }
     }
 
     /* 영화관 선택 */
     private async selectTheater(page: Page): Promise<void> {
-
-        const theaterSelect:
+        const theater_select:
             ElementHandle<Element> | null =
             await page.waitForSelector(
                 'div[class="tab-left-area"] > ul > li > a[title="극장별 선택"]'
@@ -136,11 +184,10 @@ class DolbyCrawler extends Crawler {
 
         await page.evaluate(
             elem => (elem as HTMLElement)?.click(),
-            theaterSelect
+            theater_select
         );
 
         if (this.theater === '남돌비') {
-
             const gyeonggi:
                 ElementHandle<Element> | null =
                 await page.waitForSelector(
@@ -163,8 +210,8 @@ class DolbyCrawler extends Crawler {
                 namyang
             );
 
-            await new Promise(
-                resolve => setTimeout(resolve, 100)
+            await new Promise(resolve =>
+                setTimeout(resolve, 100)
             );
 
             await page.evaluate(
@@ -173,7 +220,6 @@ class DolbyCrawler extends Crawler {
             );
 
         } else if (this.theater === '코돌비') {
-
             const coex:
                 ElementHandle<Element> | null =
                 await page.waitForSelector(
@@ -185,8 +231,8 @@ class DolbyCrawler extends Crawler {
                 coex
             );
 
-            await new Promise(
-                resolve => setTimeout(resolve, 100)
+            await new Promise(resolve =>
+                setTimeout(resolve, 100)
             );
 
             await page.evaluate(
@@ -199,15 +245,14 @@ class DolbyCrawler extends Crawler {
             '#contents > div > div > div.time-schedule.mb30'
         );
 
-        await new Promise(
-            resolve => setTimeout(resolve, 300)
+        await new Promise(resolve =>
+            setTimeout(resolve, 300)
         );
     }
 
-    /* 달력 보기 */
+    /* 달력 보기 버튼 클릭 */
     private async openCalendar(page: Page): Promise<void> {
-
-        const calendar:
+        const calender:
             ElementHandle<Element> | null =
             await page.waitForSelector(
                 '#contents > div > div > div.time-schedule.mb30 > div > div.bg-line > button[title="달력보기"]'
@@ -215,13 +260,12 @@ class DolbyCrawler extends Crawler {
 
         await page.evaluate(
             elem => (elem as HTMLElement)?.click(),
-            calendar
+            calender
         );
     }
 
-    /* 달력 월 조정 */
+    /* 달력의 월을 원하는 월까지 이동 */
     private async adjustMonth(page: Page): Promise<void> {
-
         const month:
             ElementHandle<Element> | null =
             await page.waitForSelector(
@@ -252,13 +296,11 @@ class DolbyCrawler extends Crawler {
                 10
             );
 
-        const diff =
+        const diff: number =
             targetMonth - currentMonth;
 
         if (diff > 0) {
-
             for (let i = 0; i < diff; i++) {
-
                 const nextBtn:
                     ElementHandle<Element> | null =
                     await page.waitForSelector(
@@ -272,9 +314,7 @@ class DolbyCrawler extends Crawler {
             }
 
         } else if (diff < 0) {
-
             for (let i = 0; i > diff; i--) {
-
                 const prevBtn:
                     ElementHandle<Element> | null =
                     await page.waitForSelector(
@@ -289,10 +329,9 @@ class DolbyCrawler extends Crawler {
         }
     }
 
-    /* 원하는 날짜 클릭 */
+    /* 달력에서 원하는 날짜 클릭 */
     private async selectDay(page: Page): Promise<void> {
-
-        const targetDay =
+        const targetDay: string =
             String(
                 parseInt(
                     this.date.substring(6, 8),
@@ -311,7 +350,6 @@ class DolbyCrawler extends Crawler {
             );
 
         for (let i = 0; i < days.length; i++) {
-
             const dayText:
                 string | null =
                 await page.evaluate(
@@ -320,7 +358,6 @@ class DolbyCrawler extends Crawler {
                 );
 
             if (targetDay === dayText) {
-
                 await page.evaluate(
                     elem => elem.click(),
                     days[i]
@@ -331,7 +368,7 @@ class DolbyCrawler extends Crawler {
         }
     }
 
-    /* 시간표 로딩 대기 */
+    /* 날짜 클릭 후 시간표 대기 */
     private async waitForTimetable(
         page: Page
     ): Promise<boolean> {
@@ -382,38 +419,34 @@ class DolbyCrawler extends Crawler {
         dolby: boolean;
     }> {
 
-        const content =
+        const content: string =
             await page.content();
 
-        const $ =
+        const $:
+            cheerio.Root =
             Cheerio.load(content);
 
         const brchNm =
-            $('#contents > div > div > h3:nth-child(5)')
-                .text()
-                .trim();
+            $('#contents > div > div > h3:nth-child(5)').text();
 
         const theaterNm =
             $('p.theater-name');
 
-        let timeTable = '';
-        let dolby = false;
+        let timeTable: string = '';
+        let dolby: boolean = false;
 
         theaterNm.each((i, e) => {
 
-            const theaterName =
+            if (
                 $(e)
                     .text()
-                    .trim()
-                    .toUpperCase();
-
-            if (
-                theaterName.includes(
-                    'DOLBY CINEMA'
-                )
+                    .toUpperCase()
+                    .includes(
+                        'DOLBY CINEMA'
+                    )
             ) {
 
-                const movieNm =
+                const movieNm: string =
                     $(e)
                         .parents('.theater-list')
                         .find(
@@ -422,25 +455,22 @@ class DolbyCrawler extends Crawler {
                         .text()
                         .trim();
 
-                const play =
+                const play:
+                    cheerio.Cheerio =
                     $(e)
                         .parents('.theater-type-box')
                         .find(
                             '.theater-time table.time-list-table > tbody > tr > td'
                         );
 
-                const playDate =
+                const playDate:
+                    string | undefined =
                     $(play).attr('play-de');
 
-                /*
-                 * Dolby Cinema를 처음 발견했을 때
-                 * 헤더 추가
-                 */
                 if (!dolby) {
-
                     timeTable +=
                         brchNm +
-                        ' 상영시간표\n' +
+                        '\n' +
                         playDate?.substring(0, 4) +
                         '년 ' +
                         playDate?.substring(4, 6) +
@@ -452,18 +482,12 @@ class DolbyCrawler extends Crawler {
 
                 dolby = true;
 
-                /*
-                 * 영화 제목
-                 */
                 timeTable +=
                     `🎬 ${movieNm}\n`;
 
-                /*
-                 * 상영시간
-                 */
                 play.each((i, e) => {
 
-                    let playTime =
+                    let playTime: string =
                         $(e)
                             .find(
                                 'div.td-ab div.play-time > p'
@@ -472,7 +496,7 @@ class DolbyCrawler extends Crawler {
                             .text()
                             .trim();
 
-                    let seatRemainCnt =
+                    let seatRemainCnt: string =
                         $(e)
                             .find(
                                 'div.td-ab > div.txt-center > a > p.chair'
@@ -480,15 +504,10 @@ class DolbyCrawler extends Crawler {
                             .text()
                             .trim();
 
-                    /*
-                     * 매진된 시간표
-                     */
                     if (
-                        $(e).hasClass(
-                            'end-time'
-                        )
+                        $(e).attr('class') ===
+                        'end-time'
                     ) {
-
                         playTime =
                             $(e)
                                 .find('p.time')
