@@ -61,18 +61,23 @@ class DolbyCrawler extends Crawler {
                         timetableAvailable
                     );
 
-                    if (!timetableAvailable) {
-                        console.log(
-                            'Dolby Cinema가 열리지 않았습니다.'
-                        );
+                   if (!timetableAvailable) {
+    console.log(
+        'Dolby Cinema가 열리지 않았습니다.'
+    );
 
-                        this.resetErrorCount();
+    this.resetErrorCount();
 
-                        await this.closeQuietly(page);
-                        await this.trick();
+    await this.closeQuietly(page);
 
-                        continue;
-                    }
+    console.log('[WAIT] 3분 후 다시 확인합니다.');
+
+    await new Promise<void>((resolve) => {
+        setTimeout(resolve, 3 * 60 * 1000);
+    });
+
+    continue;
+}
 
                     console.log('[8] 시간표 파싱 시작');
 
