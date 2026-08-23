@@ -24,9 +24,9 @@ class DolbyCrawler extends Crawler {
 
                 try {
                     const pageOption = {
-                        waitUntil: 'networkidle2',
-                        timeout: 20000
-                    } as const;
+    waitUntil: 'domcontentloaded',
+    timeout: 60000
+} as const;
 
                     console.log('[1] 메가박스 페이지 접속');
 
