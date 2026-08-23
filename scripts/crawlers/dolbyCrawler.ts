@@ -70,10 +70,10 @@ class DolbyCrawler extends Crawler {
 
     await this.closeQuietly(page);
 
-    console.log('[WAIT] 3분 후 다시 확인합니다.');
+    console.log('[WAIT] 1분 후 다시 확인합니다.');
 
     await new Promise<void>((resolve) => {
-        setTimeout(resolve, 3 * 60 * 1000);
+        setTimeout(resolve, 1 * 60 * 1000);
     });
 
     continue;
