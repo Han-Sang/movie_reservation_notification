@@ -38,24 +38,21 @@ async function main(): Promise<void> {
     try {
         const result = await crawler.crawl();
 
-console.log('[10] TARGET_MOVIE:', JSON.stringify(TARGET_MOVIE));
-console.log('[10] result 포함 여부:', result.includes(TARGET_MOVIE));
-console.log('[10] result 전체:', JSON.stringify(result));
         
       if (result && result.includes(TARGET_MOVIE)) {
-    console.log('[10] 오딧세이 발견 → Telegram 전송 시작');
+  console.log('[12] 오딧세이 발견 → Telegram 전송 시작');
 
     try {
         await bot.sendMessage(
             config.telegram.chatId,
             `🚨 ${TARGET_MOVIE} 예매 오픈!\n\n` +
-            `📅 2026-08-26\n` +
+            `📅 ${formatDate(TARGET_DATE)}\n` +
             `🎬 남양주 현대아울렛 스페이스원\n` +
             `🎞️ Dolby Cinema\n\n` +
             result
         );
 
-        console.log('[11] Telegram 정보 메시지 전송 완료');
+        console.log('[13] Telegram 정보 메시지 전송 완료');
     } catch (err) {
         console.error('[Telegram 정보 메시지 전송 실패]', err);
         throw err;
