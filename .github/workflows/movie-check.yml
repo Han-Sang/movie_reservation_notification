@@ -1,1 +1,48 @@
 
+name: Movie Reservation Watcher
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */4 * * *"
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 230
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create config.yaml
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          cat > config.yaml <<EOF
+          telegram:
+            token: "${TELEGRAM_BOT_TOKEN}"
+            chatId: "${TELEGRAM_CHAT_ID}"
+
+          urls:
+            imax: https://cgv.co.kr/cnm/movieBook/cinema
+            dolby: https://www.megabox.co.kr/booking/timetable
+
+          watch:
+            horizonDays: 14
+            pollIntervalSec: 300
+          EOF
+
+      - name: Start movie watcher
+        run: |
+          node --loader ts-node/esm --experimental-specifier-resolution=node scripts/autoCheck.ts
