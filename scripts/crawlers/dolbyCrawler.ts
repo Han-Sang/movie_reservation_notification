@@ -96,33 +96,35 @@ class DolbyCrawler extends Crawler {
                         dolby
                     );
 
-                    if (dolby) {
-                        console.log(
-                            '[10] 시간표 반환 시작'
-                        );
+                  if (dolby) {
+    console.log('[10] 시간표 반환 시작');
 
-                        console.log(
-                            '[10-1] 반환할 시간표 길이:',
-                            timeTable.length
-                        );
+    console.log(
+        '[10-1] 반환할 시간표 길이:',
+        timeTable.length
+    );
 
-                        console.log(
-                            '[10-2] 반환할 시간표:',
-                            timeTable
-                        );
+    console.log(
+        '[10-2] 반환할 시간표:',
+        timeTable
+    );
 
-                        await this.closeQuietly(page);
+    if (this.notify) {
+        this.notify(
+            `🚨 Dolby Cinema 예매 오픈!\n\n${timeTable}`
+        );
 
-                        console.log(
-                            '[11] 시간표 반환 완료'
-                        );
+        console.log(
+            '[10-3] Telegram 시간표 전송 요청 완료'
+        );
+    }
 
-                        // 중요:
-                        // 여기서는 browser를 닫지 않는다.
-                        // return 이후 autoCheck.ts에서
-                        // crawler.crawl()의 반환값을 받아야 한다.
-                        return timeTable;
-                    }
+    await this.closeQuietly(page);
+
+    console.log('[11] 시간표 반환 완료');
+
+    return timeTable;
+}
 
                     console.log(
                         '[10] Dolby Cinema가 열리지 않았습니다.'
