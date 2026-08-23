@@ -2,7 +2,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import DolbyCrawler from './crawlers/dolbyCrawler';
 import { config } from './config';
 
-const TARGET_DATE = '20260831';
+const TARGET_DATE = '20260827';
 const TARGET_THEATER = '남돌비';
 const TARGET_MOVIE = '오딧세이';
 
