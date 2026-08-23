@@ -78,20 +78,20 @@ class DolbyCrawler extends Crawler {
                     console.log("[9] Dolby 발견 여부:", dolby);
 
                     // Dolby Cinema 오픈 확인
-                    if (dolby) {
-                        console.log(timeTable);
+                   if (dolby) {
+     console.log("[10] 시간표 반환 시작");
+    console.log(timeTable);
 
-                        await this.closeQuietly(page);
+    await this.closeQuietly(page);
 
-                        return timeTable;
-                    }
+    console.log("[11] 시간표 반환 완료");
+    return timeTable;
+} else {
+    console.log("[10] Dolby Cinema가 열리지 않았습니다.");
 
-                    // 아직 Dolby Cinema가 편성되지 않음
-                    console.log("Dolby Cinema가 열리지 않았습니다.");
-
-                    this.resetErrorCount();
-                    await this.closeQuietly(page);
-                    await this.trick();
+    this.resetErrorCount();
+    await this.closeQuietly(page);
+    await this.trick();
 
                 } catch (err) {
                     this.handleError(err);
