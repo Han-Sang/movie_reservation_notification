@@ -57,7 +57,7 @@ async function main(): Promise<void> {
             config.telegram.chatId,
             `🎬 영화 예매 감시를 시작합니다.\n\n` +
             `영화: ${TARGET_MOVIE}\n` +
-            `날짜: 2026-08-31\n` +
+            `날짜: ${TARGET_DATE.substring(0, 4)}-${TARGET_DATE.substring(4, 6)}-${TARGET_DATE.substring(6, 8)}\n` +
             `극장: 남양주 현대아울렛 스페이스원 Dolby Cinema\n` +
             `⏱️ 5분 간격으로 확인합니다.`
         );
@@ -113,7 +113,7 @@ async function main(): Promise<void> {
 
                 const message =
                     `🚨 ${TARGET_MOVIE} 예매 오픈!\n\n` +
-                    `📅 2026-08-31\n` +
+                    `📅 ${TARGET_DATE.substring(0, 4)}-${TARGET_DATE.substring(4, 6)}-${TARGET_DATE.substring(6, 8)}\n` +
                     `🎬 남양주 현대아울렛 스페이스원\n` +
                     `🎞️ Dolby Cinema\n\n` +
                     result;
