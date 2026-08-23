@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
-import DolbyCrawler from './crawlers/dolbyCrawler';
-import { config } from './config';
+import DolbyCrawler from '../src/crawlers/dolbyCrawler';
+import { config } from '../src/config';
 
 const TARGET_DATE = '20260826';
 const TARGET_THEATER = '남돌비';
@@ -18,6 +18,28 @@ crawler.notify = (msg: string) => {
             console.error('[Telegram 전송 실패]', err);
         });
 };
+
+function normalizeMovieTitle(title: string): string {
+    return title
+        .replace(/\s+/g, '')
+        .trim()
+        .toLowerCase();
+}
+
+function isTargetMovie(result: string): boolean {
+    const normalizedResult = normalizeMovieTitle(result);
+
+    const targetMovieAliases = [
+        '오딧세이',
+        '오디세이'
+    ];
+
+    return targetMovieAliases.some((movie) => {
+        return normalizedResult.includes(
+            normalizeMovieTitle(movie)
+        );
+    });
+}
 
 async function main(): Promise<void> {
 
@@ -39,8 +61,13 @@ async function main(): Promise<void> {
         );
 
         console.log('[START] Telegram 시작 메시지 전송 완료');
+
     } catch (err) {
-        console.error('[START] Telegram 시작 메시지 전송 실패:', err);
+
+        console.error(
+            '[START] Telegram 시작 메시지 전송 실패:',
+            err
+        );
     }
 
     while (true) {
@@ -62,24 +89,25 @@ async function main(): Promise<void> {
             console.log(result);
             console.log('==============================');
 
-            // 공백/줄바꿈 제거 후 비교
-            const normalizedResult = result
-                .replace(/\s+/g, '')
-                .trim();
+            const normalizedResult = normalizeMovieTitle(result);
 
-            const normalizedMovie = TARGET_MOVIE
-                .replace(/\s+/g, '')
-                .trim();
-
-            console.log('[6] TARGET_MOVIE:', JSON.stringify(TARGET_MOVIE));
-            console.log('[7] normalizedMovie:', JSON.stringify(normalizedMovie));
             console.log(
-                '[8] 영화 포함 여부:',
-                normalizedResult.includes(normalizedMovie)
+                '[6] TARGET_MOVIE:',
+                JSON.stringify(TARGET_MOVIE)
+            );
+
+            console.log(
+                '[7] normalizedResult:',
+                JSON.stringify(normalizedResult)
+            );
+
+            console.log(
+                '[8] 목표 영화 발견 여부:',
+                isTargetMovie(result)
             );
 
             // 목표 영화 발견
-            if (normalizedResult.includes(normalizedMovie)) {
+            if (isTargetMovie(result)) {
 
                 console.log('==============================');
                 console.log('[9] 목표 영화 발견!');
@@ -104,8 +132,13 @@ async function main(): Promise<void> {
                     );
 
                     console.log('==============================');
-                    console.log('[12] Telegram 정보 메시지 전송 완료');
-                    console.log('[13] Telegram message_id:', sentMessage.message_id);
+                    console.log(
+                        '[12] Telegram 정보 메시지 전송 완료'
+                    );
+                    console.log(
+                        '[13] Telegram message_id:',
+                        sentMessage.message_id
+                    );
                     console.log('==============================');
 
                 } catch (telegramError) {
@@ -113,10 +146,13 @@ async function main(): Promise<void> {
                     console.error(
                         '=============================='
                     );
+
                     console.error(
                         '[Telegram 정보 메시지 전송 실패]'
                     );
+
                     console.error(telegramError);
+
                     console.error(
                         '=============================='
                     );
