@@ -11,105 +11,106 @@ class DolbyCrawler extends Crawler {
     }
 
     /* 메가박스 Dolby 웹 크롤링 */
-    async crawl(): Promise<string> {
-        // crawl() 재진입 시 isStop을 반드시 초기화
-        this.isStop = false;
+async crawl(): Promise<string> {
+    // crawl() 재진입 시 isStop을 반드시 초기화
+    this.isStop = false;
 
-        // 웹 크롤링을 위한 puppeteer 객체 생성
-        this.browser = await Puppeteer.launch({
-            headless: 'new',
-            args: CLOUD_SANDBOX_ARGS
-        });
+    // 웹 크롤링을 위한 puppeteer 객체 생성
+    this.browser = await Puppeteer.launch({
+        headless: 'new',
+        args: CLOUD_SANDBOX_ARGS
+    });
 
-        try {
-            while (!this.isStop) {
-                const page: Page = await this.browser.newPage();
+    try {
+        while (!this.isStop) {
+            const page: Page = await this.browser.newPage();
 
-                try {
-                    // 탭 옵션
-                    const pageOption = {
-                        waitUntil: 'networkidle2',
-                        timeout: 20000
-                    } as const;
+            try {
+                const pageOption = {
+                    waitUntil: 'networkidle2',
+                    timeout: 20000
+                } as const;
 
-                    console.log("[1] 메가박스 페이지 접속");
+                console.log("[1] 메가박스 페이지 접속");
+                await page.goto(this.config.urls.dolby, pageOption);
 
-                    await page.goto(this.config.urls.dolby, pageOption);
+                console.log("[2] 극장 선택 시작");
+                await this.selectTheater(page);
 
-                    console.log("[2] 극장 선택 시작");
+                console.log("[3] 극장 선택 완료");
+                await this.openCalendar(page);
 
-                    await this.selectTheater(page);
+                console.log("[4] 달력 열기 완료");
+                await this.adjustMonth(page);
 
-                    console.log("[3] 극장 선택 완료");
+                console.log("[5] 월 조정 완료");
+                await this.selectDay(page);
 
-                    await this.openCalendar(page);
+                console.log("[6] 날짜 선택 완료");
 
-                    console.log("[4] 달력 열기 완료");
+                const timetableAvailable =
+                    await this.waitForTimetable(page);
 
-                    await this.adjustMonth(page);
+                console.log(
+                    "[7] 시간표 확인 결과:",
+                    timetableAvailable
+                );
 
-                    console.log("[5] 월 조정 완료");
-
-                    await this.selectDay(page);
-
-                    console.log("[6] 날짜 선택 완료");
-
-                    const timetableAvailable = await this.waitForTimetable(page);
-
-                    console.log("[7] 시간표 확인 결과:", timetableAvailable);
-
-                    // 원하는 날짜가 아직 예매 가능일이 아닌 경우
-                    if (!timetableAvailable) {
-                        console.log("Dolby Cinema가 열리지 않았습니다.");
-
-                        this.resetErrorCount();
-                        await this.closeQuietly(page);
-                        await this.trick();
-
-                        continue;
-                    }
-
-                    console.log("[8] 시간표 파싱 시작");
-
-                    // 시간표 파싱
-                    const { timeTable, dolby } =
-                        await this.parseDolbyTimetable(page);
-
-                    console.log("[9] Dolby 발견 여부:", dolby);
-
-                    // Dolby Cinema 오픈 확인
-                   if (dolby) {
-     console.log("[10] 시간표 반환 시작");
-    console.log(timeTable);
-
-    await this.closeQuietly(page);
-
-    console.log("[11] 시간표 반환 완료");
-    return timeTable;
-} else {
-    console.log("[10] Dolby Cinema가 열리지 않았습니다.");
-
-    this.resetErrorCount();
-    await this.closeQuietly(page);
-    await this.trick();
-
-                } catch (err) {
-                    this.handleError(err);
-
+                // 아직 예매 가능한 날짜가 아닌 경우
+                if (!timetableAvailable) {
                     console.log("Dolby Cinema가 열리지 않았습니다.");
 
+                    this.resetErrorCount();
                     await this.closeQuietly(page);
                     await this.trick();
-                }
-            }
-        } finally {
-            // 브라우저 정리
-            await this.closeQuietly(this.browser);
-            this.browser = null;
-        }
 
-        return "";
+                    continue;
+                }
+
+                console.log("[8] 시간표 파싱 시작");
+
+                // 시간표 파싱
+                const { timeTable, dolby } =
+                    await this.parseDolbyTimetable(page);
+
+                console.log("[9] Dolby 발견 여부:", dolby);
+
+                // Dolby Cinema가 발견되면 시간표 반환
+                if (dolby) {
+                    console.log("[10] 시간표 반환 시작");
+                    console.log(timeTable);
+
+                    await this.closeQuietly(page);
+
+                    console.log("[11] 시간표 반환 완료");
+
+                    return timeTable;
+                }
+
+                // Dolby Cinema가 아직 편성되지 않은 경우
+                console.log("[10] Dolby Cinema가 열리지 않았습니다.");
+
+                this.resetErrorCount();
+                await this.closeQuietly(page);
+                await this.trick();
+
+            } catch (err) {
+                this.handleError(err);
+
+                console.log("Dolby Cinema가 열리지 않았습니다.");
+
+                await this.closeQuietly(page);
+                await this.trick();
+            }
+        }
+    } finally {
+        // 브라우저 정리
+        await this.closeQuietly(this.browser);
+        this.browser = null;
     }
+
+    return "";
+}
 
     /* 영화관 선택 */
     private async selectTheater(page: Page): Promise<void> {
