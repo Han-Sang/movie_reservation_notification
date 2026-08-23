@@ -48,6 +48,7 @@ async function main(): Promise<void> {
     console.log('영화:', TARGET_MOVIE);
     console.log('날짜:', TARGET_DATE);
     console.log('극장:', TARGET_THEATER);
+    console.log('크롤링 간격: 5분');
     console.log('==============================');
 
     // 시작 메시지
@@ -57,10 +58,13 @@ async function main(): Promise<void> {
             `🎬 영화 예매 감시를 시작합니다.\n\n` +
             `영화: ${TARGET_MOVIE}\n` +
             `날짜: 2026-08-31\n` +
-            `극장: 남양주 현대아울렛 스페이스원 Dolby Cinema`
+            `극장: 남양주 현대아울렛 스페이스원 Dolby Cinema\n` +
+            `⏱️ 5분 간격으로 확인합니다.`
         );
 
-        console.log('[START] Telegram 시작 메시지 전송 완료');
+        console.log(
+            '[START] Telegram 시작 메시지 전송 완료'
+        );
 
     } catch (err) {
 
@@ -89,20 +93,13 @@ async function main(): Promise<void> {
             console.log(result);
             console.log('==============================');
 
-            const normalizedResult = normalizeMovieTitle(result);
-
             console.log(
                 '[6] TARGET_MOVIE:',
                 JSON.stringify(TARGET_MOVIE)
             );
 
             console.log(
-                '[7] normalizedResult:',
-                JSON.stringify(normalizedResult)
-            );
-
-            console.log(
-                '[8] 목표 영화 발견 여부:',
+                '[7] 목표 영화 발견 여부:',
                 isTargetMovie(result)
             );
 
@@ -110,18 +107,18 @@ async function main(): Promise<void> {
             if (isTargetMovie(result)) {
 
                 console.log('==============================');
-                console.log('[9] 목표 영화 발견!');
-                console.log('[10] Telegram 전송 시작');
+                console.log('[8] 목표 영화 발견!');
+                console.log('[9] Telegram 전송 시작');
                 console.log('==============================');
 
                 const message =
                     `🚨 ${TARGET_MOVIE} 예매 오픈!\n\n` +
-                    `📅 2026-08-26\n` +
+                    `📅 2026-08-31\n` +
                     `🎬 남양주 현대아울렛 스페이스원\n` +
                     `🎞️ Dolby Cinema\n\n` +
                     result;
 
-                console.log('[11] 전송할 메시지:');
+                console.log('[10] 전송할 메시지:');
                 console.log(message);
 
                 try {
@@ -133,10 +130,10 @@ async function main(): Promise<void> {
 
                     console.log('==============================');
                     console.log(
-                        '[12] Telegram 정보 메시지 전송 완료'
+                        '[11] Telegram 정보 메시지 전송 완료'
                     );
                     console.log(
-                        '[13] Telegram message_id:',
+                        '[12] Telegram message_id:',
                         sentMessage.message_id
                     );
                     console.log('==============================');
@@ -144,33 +141,34 @@ async function main(): Promise<void> {
                 } catch (telegramError) {
 
                     console.error(
-                        '=============================='
-                    );
-
-                    console.error(
-                        '[Telegram 정보 메시지 전송 실패]'
-                    );
-
-                    console.error(telegramError);
-
-                    console.error(
-                        '=============================='
+                        '[Telegram 정보 메시지 전송 실패]',
+                        telegramError
                     );
 
                     throw telegramError;
                 }
 
-                console.log('[14] 감시 종료');
+                console.log(
+                    '[13] 목표 영화 발견 → 감시 종료'
+                );
 
                 break;
             }
 
+            // 5분 대기
             console.log(
-                `[15] ${TARGET_MOVIE}가 없습니다. 10초 후 다시 확인합니다.`
+                `[14] ${TARGET_MOVIE}가 없습니다.`
+            );
+
+            console.log(
+                '[15] 5분 후 다시 확인합니다.'
             );
 
             await new Promise<void>((resolve) => {
-                setTimeout(resolve, 10000);
+                setTimeout(
+                    resolve,
+                    5 * 60 * 1000
+                );
             });
 
         } catch (err) {
@@ -180,8 +178,15 @@ async function main(): Promise<void> {
             console.error(err);
             console.error('==============================');
 
+            console.log(
+                '[오류] 30초 후 다시 시도합니다.'
+            );
+
             await new Promise<void>((resolve) => {
-                setTimeout(resolve, 30000);
+                setTimeout(
+                    resolve,
+                    30 * 1000
+                );
             });
         }
     }
