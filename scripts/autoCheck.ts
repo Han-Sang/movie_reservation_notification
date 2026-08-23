@@ -38,6 +38,10 @@ async function main(): Promise<void> {
     try {
         const result = await crawler.crawl();
 
+console.log('[10] TARGET_MOVIE:', JSON.stringify(TARGET_MOVIE));
+console.log('[10] result 포함 여부:', result.includes(TARGET_MOVIE));
+console.log('[10] result 전체:', JSON.stringify(result));
+        
       if (result && result.includes(TARGET_MOVIE)) {
     console.log('[10] 오딧세이 발견 → Telegram 전송 시작');
 
