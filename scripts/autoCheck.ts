@@ -17,6 +17,10 @@ crawler.notify = (msg: string) => {
         .catch((err) => console.error('[Telegram 전송 실패]', err));
 };
 
+function formatDate(date: string): string {
+    return `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(6, 8)}`;
+}
+
 async function main(): Promise<void> {
     console.log(`영화 감시 시작`);
     console.log(`영화: ${TARGET_MOVIE}`);
@@ -25,7 +29,10 @@ async function main(): Promise<void> {
 
     await bot.sendMessage(
         config.telegram.chatId,
-        `🎬 영화 예매 감시를 시작합니다.\n\n영화: ${TARGET_MOVIE}\n날짜: 2026-08-31\n극장: 남양주 현대아울렛 스페이스원 Dolby Cinema`
+        `🎬 영화 예매 감시를 시작합니다.\n\n` +
+        `영화: ${TARGET_MOVIE}\n` +
+        `날짜: ${formatDate(TARGET_DATE)}\n` +
+        `극장: 남양주 현대아울렛 스페이스원 Dolby Cinema`
     );
 
     try {
@@ -35,7 +42,7 @@ async function main(): Promise<void> {
             await bot.sendMessage(
                 config.telegram.chatId,
                 `🚨 ${TARGET_MOVIE} 예매 오픈!\n\n` +
-                `📅 2026-08-31\n` +
+                `📅 ${formatDate(TARGET_DATE)}\n` +
                 `🎬 남양주 현대아울렛 스페이스원\n` +
                 `🎞️ Dolby Cinema\n\n` +
                 result
