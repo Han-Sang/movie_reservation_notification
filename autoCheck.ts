@@ -34,19 +34,37 @@ async function main(): Promise<void> {
 
             const result = await crawler.crawl();
 
-            if (result && result.includes(TARGET_MOVIE)) {
-                await bot.sendMessage(
-                    config.telegram.chatId,
-                    `🚨 ${TARGET_MOVIE} 예매 오픈!\n\n` +
-                    `📅 2026-08-31\n` +
-                    `🎬 남양주 현대아울렛 스페이스원\n` +
-                    `🎞️ Dolby Cinema\n\n` +
-                    result
-                );
+          const normalizedResult = result.replace(/\s+/g, '');
+const normalizedMovie = TARGET_MOVIE.replace(/\s+/g, '');
 
-                console.log('목표 영화 발견! 감시를 종료합니다.');
-                break;
-            }
+console.log('[12] TARGET_MOVIE:', JSON.stringify(TARGET_MOVIE));
+console.log(
+    '[13] 영화 포함 여부:',
+    normalizedResult.includes(normalizedMovie)
+);
+
+if (result && normalizedResult.includes(normalizedMovie)) {
+    console.log('[14] 오딧세이 발견 → Telegram 전송 시작');
+
+    try {
+        await bot.sendMessage(
+            config.telegram.chatId,
+            `🚨 ${TARGET_MOVIE} 예매 오픈!\n\n` +
+            `📅 2026-08-26\n` +
+            `🎬 남양주 현대아울렛 스페이스원\n` +
+            `🎞️ Dolby Cinema\n\n` +
+            result
+        );
+
+        console.log('[15] Telegram 정보 메시지 전송 완료');
+    } catch (err) {
+        console.error('[Telegram 정보 메시지 전송 실패]', err);
+        throw err;
+    }
+
+    console.log('목표 영화 발견! 감시를 종료합니다.');
+    break;
+}
 
             console.log(
                 `${TARGET_MOVIE}가 아직 시간표에 없습니다. 다시 확인합니다.`
