@@ -36,11 +36,39 @@ class DolbyCrawler extends Crawler {
 
                     await page.goto(this.config.urls.dolby, pageOption);   // 메가박스 예매 사이트 접속
 
-                    await this.selectTheater(page);
+                   console.log("[1] 메가박스 페이지 접속");
+await page.goto(this.config.urls.dolby, pageOption);
 
-                    await this.openCalendar(page);
-                    await this.adjustMonth(page);
-                    await this.selectDay(page);
+console.log("[2] 극장 선택 시작");
+await this.selectTheater(page);
+
+console.log("[3] 극장 선택 완료");
+await this.openCalendar(page);
+
+console.log("[4] 달력 열기 완료");
+await this.adjustMonth(page);
+
+console.log("[5] 월 조정 완료");
+await this.selectDay(page);
+
+console.log("[6] 날짜 선택 완료");
+const timetableAvailable = await this.waitForTimetable(page);
+
+console.log("[7] 시간표 확인 결과:", timetableAvailable);
+
+if (!timetableAvailable) {
+    console.log("Dolby Cinema가 열리지 않았습니다.");
+
+    this.resetErrorCount();
+    await this.closeQuietly(page);
+    await this.trick();
+
+    continue;
+}
+                    console.log("[8] 시간표 파싱 시작");
+const { timeTable, dolby } = await this.parseDolbyTimetable(page);
+
+console.log("[9] Dolby 발견 여부:", dolby);
 
                     // 원하는 날짜가 아직 예매 가능일이 아닌 경우 (= 아직 안 열림, 정상 분기)
                     if (!await this.waitForTimetable(page)) {
@@ -122,7 +150,7 @@ class DolbyCrawler extends Crawler {
         const calender: ElementHandle<Element> | null = await page.waitForSelector('#contents > div > div > div.time-schedule.mb30 > div > div.bg-line > button[title="달력보기"]');
         await page.evaluate(elem => (elem as HTMLElement)?.click(), calender);    // 캘린더 클릭
     }
-
+TARGET_DATE
     /* 달력에 표시된 월을 원하는 월(this.date의 MM)까지 이전/다음 버튼으로 이동 */
     private async adjustMonth(page: Page): Promise<void> {
         const month: ElementHandle<Element> | null = await page.waitForSelector('#ui-datepicker-div > div.ui-datepicker-header.ui-widget-header.ui-helper-clearfix.ui-corner-all > div > span.ui-datepicker-month');
