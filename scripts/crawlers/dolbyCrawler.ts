@@ -82,24 +82,16 @@ class DolbyCrawler extends Crawler {
                      * 시간표 전체를 그대로 반환한다.
                      */
                     if (dolby) {
-                        console.log('[10] 시간표 반환 시작');
+    console.log("[10] 시간표 반환 시작");
+    console.log("[10-1] 반환할 시간표 길이:", timeTable.length);
+    console.log("[10-2] 반환할 시간표:", timeTable);
 
-                        console.log(
-                            '[10-1] 반환할 시간표 길이:',
-                            timeTable.length
-                        );
+    await this.closeQuietly(page);
 
-                        console.log(
-                            '[10-2] 반환할 시간표:',
-                            timeTable
-                        );
+    console.log("[11] 시간표 반환 완료");
 
-                        await this.closeQuietly(page);
-
-                        console.log('[11] 시간표 반환 완료');
-
-                        return timeTable;
-                    }
+    return timeTable;
+}
 
                     console.log(
                         '[10] Dolby Cinema가 열리지 않았습니다.'
@@ -123,9 +115,12 @@ class DolbyCrawler extends Crawler {
                 }
             }
         } finally {
-            await this.closeQuietly(this.browser);
-            this.browser = null;
-        }
+    console.log("[11-1] crawl finally 진입");
+
+    this.browser = null;
+
+    console.log("[11-2] crawl finally 종료");
+}
 
         return '';
     }
