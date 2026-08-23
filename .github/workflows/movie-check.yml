@@ -49,6 +49,9 @@ jobs:
             pollIntervalSec: 300
           EOF
 
+      - name: TypeScript typecheck
+        run: npm run typecheck
+
       - name: Start movie watcher
         env:
           PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
